@@ -1,81 +1,104 @@
 const products = [
-    {
-      id: 1,
-      name: "Product 1",
-      desc: "Description of the product. Description of the product. ",
-      price: 25,
-    },
-    {
-      id: 2,
-      name: "Product 2",
-      desc: "Description of the product. Description of the product. ",
-      price: 45,
-    },
-    {
-      id: 3,
-      name: "Product 3",
-      desc: "Description of the product. Description of the product. ",
-      price: 30,
-    },
-  ];
-  const cart = {};
-  const addToCart = (id) => {
-    if (!cart[id]) cart[id] = 1;
+  {
+    id: 1,
+    name: "Laptop",
+    desc: "A powerful laptop for work and gaming.",
+    price: 800,
+    image: "assets/images/product1.jpg"
+  },
+  {
+    id: 2,
+    name: "Desktop Computer",
+    desc: "A high-performance desktop computer.",
+    price: 1200,
+    image: "assets/images/product2.jpg"
+  },
+  {
+    id: 3,
+    name: "Gaming Laptop",
+    desc: "A fast gaming laptop with RGB keyboard.",
+    price: 1500,
+    image: "assets/images/product3.jpeg"
+  }
+];
+
+// ✅ Show products with images in index.html
+const showProducts = () => {
+  let str = "<div class='row'>";
+  products.forEach((product) => {
+    str += `
+      <div class='box'>
+        <img src="${product.image}" alt="${product.name}" class="product-image">
+        <h3>${product.name}</h3>
+        <h4>Price: $${product.price}</h4>
+        <button onclick="addToCart(${product.id})">Add to Cart</button>
+      </div>
+    `;
+  });
+  document.getElementById("divProducts").innerHTML = str + "</div>";
+};
+
+// ✅ Add to cart and save in localStorage
+const addToCart = (id) => {
+  let cart = JSON.parse(localStorage.getItem("cart")) || {};
+  cart[id] = (cart[id] || 0) + 1;
+  localStorage.setItem("cart", JSON.stringify(cart));
+  updateCartCount();
+};
+
+// ✅ Update cart count in header
+const updateCartCount = () => {
+  let cart = JSON.parse(localStorage.getItem("cart")) || {};
+  let totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  document.getElementById("items").innerText = totalItems;
+};
+
+// ✅ Show cart WITHOUT images in cart.html
+const showCart = () => {
+  let cart = JSON.parse(localStorage.getItem("cart")) || {};
+  let cartHTML = "";
+  let total = 0;
+
+  Object.keys(cart).forEach(id => {
+    let product = products.find(p => p.id == id);
+    let quantity = cart[id];
+    let subtotal = product.price * quantity;
+    total += subtotal;
+
+    cartHTML += `
+      <div class="cart-item">
+        <h3>${product.name}</h3>
+        <h4>Price: $${product.price} | Quantity: ${quantity} | Total: $${subtotal}</h4>
+        <button onclick="removeFromCart(${product.id})">Remove</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("divCart").innerHTML = cartHTML || "<p>Your cart is empty.</p>";
+  document.getElementById("divTotal").innerHTML = `<h3>Grand Total: $${total}</h3>`;
+};
+
+// ✅ Remove item from cart
+const removeFromCart = (id) => {
+  let cart = JSON.parse(localStorage.getItem("cart")) || {};
+  if (cart[id]) {
+    cart[id] -= 1;
+    if (cart[id] === 0) {
+      delete cart[id];
+    }
+  }
+  localStorage.setItem("cart", JSON.stringify(cart));
+  showCart();
+  updateCartCount();
+};
+
+// ✅ Run functions when page loads
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("divProducts")) {
+    showProducts();
+  }
+  if (document.getElementById("divCart")) {
     showCart();
-  };
-  const increment = (id) => {
-    cart[id] = cart[id] + 1;
-    showCart();
-  };
-  const decrement = (id) => {
-    cart[id] = cart[id] - 1;
-    cart[id] < 1 && delete cart[id];
-    console.log(cart);
-    showCart();
-  };
-  const showTotal = () => {
-    let total = products.reduce((sum, value) => {
-      return sum + value.price * (cart[value.id] ? cart[value.id] : 0);
-    }, 0);
-  
-    divTotal.innerHTML = `Order Value: $${total}`;
-  };
-  
-  const showCart = () => {
-    let str = "";
-    products.map((value) => {
-      if (cart[value.id]) {
-        str += `
-          <li>${value.name}-$${value.price}-<button onclick='decrement(${
-          value.id
-        })'>-</button>${cart[value.id]}<button onclick='increment(${
-          value.id
-        })'>+</button>-$${value.price * cart[value.id]}</li>
-          `;
-      }
-    });
-    divCart.innerHTML = str;
-    let count = Object.keys(cart).length;
-    items.innerHTML = count;
-    showTotal();
-  };
-  const displayCart = () => {
-    divCartBlock.style.left = "80%"
-  };
-  const hideCart = () => {
-    divCartBlock.style.left = "100%";
-  };
-  const showProducts = () => {
-    let str = "<div class='row'>";
-    products.map((value) => {
-      str += `
-        <div class='box'>
-        <h3>${value.name}</h3>
-        <p>${value.desc}</p>
-        <h4>$${value.price}</h4>
-        <button onclick=addToCart(${value.id})>Add to Cart</button>
-        </div>
-        `;
-    });
-    divProducts.innerHTML = str + "</div>";
-  };
+  }
+  updateCartCount();
+});
